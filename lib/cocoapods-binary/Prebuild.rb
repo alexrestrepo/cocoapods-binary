@@ -147,7 +147,8 @@ module Pod
                         object.real_file_path = framework_path + File.basename(path)
 
                         # storyboards and xibs change names when compiled, save the originals...
-                        if !object.real_file_path.exist?
+                        file_name = File.basename(path)
+                        if !object.real_file_path.exist? && (file_name.end_with?(".storyboard") || file_name.end_with?(".xib"))
                             source_file_path = path.gsub('${PODS_ROOT}', sandbox_path.to_s) if path.start_with? '${PODS_ROOT}'
                             source_file_path = path.gsub("${PODS_CONFIGURATION_BUILD_DIR}", sandbox_path.to_s) if path.start_with? "${PODS_CONFIGURATION_BUILD_DIR}"
                             FileUtils.copy_entry(source_file_path, object.real_file_path, false, false, true)
