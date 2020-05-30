@@ -234,18 +234,22 @@ module Pod
                 end
 
                 # copy preserve paths, scripts and others (crashlytics dsym upload...)
-                target.spec_consumers.each do |consumer|
-                    file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
-                    preserve_paths = file_accessor.preserve_paths || []
-                    Pod::UI.puts "-> Preserving files: " + preserve_paths.to_s unless preserve_paths.empty?
-                    preserve_paths.each do |path|
-                        relative = path.relative_path_from(root_path)
-                        destination = target_folder + relative
-                        destination.dirname.mkpath unless destination.dirname.exist?
-                        FileUtils.cp_r(path, destination, :remove_destination => true)
+                # ignore Appboy-iOS-SDK... the thing wants to preserve every.single.file..
+                if target.name.include?("Appboy-iOS-SDK")
+                    Pod::UI.puts "-> Ignoring preserve files for " + target.name
+                else
+                    target.spec_consumers.each do |consumer|
+                        file_accessor = Sandbox::FileAccessor.new(root_path, consumer)
+                        preserve_paths = file_accessor.preserve_paths || []
+                        Pod::UI.puts "-> Preserving files: " + preserve_paths.to_s unless preserve_paths.empty?
+                        preserve_paths.each do |path|
+                            relative = path.relative_path_from(root_path)
+                            destination = target_folder + relative
+                            destination.dirname.mkpath unless destination.dirname.exist?
+                            FileUtils.cp_r(path, destination, :remove_destination => true)
+                        end
                     end
                 end
-
             end
 
             # save the pod_name for prebuild framwork in sandbox
