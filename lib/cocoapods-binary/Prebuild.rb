@@ -147,12 +147,19 @@ module Pod
                         object.real_file_path = framework_path + File.basename(path)
                         object.target_file_path = path.gsub('${PODS_ROOT}', standard_sandbox_path.to_s) if path.start_with? '${PODS_ROOT}'
                         object.target_file_path = path.gsub("${PODS_CONFIGURATION_BUILD_DIR}", standard_sandbox_path.to_s) if path.start_with? "${PODS_CONFIGURATION_BUILD_DIR}"
+
+                        if File.basename(path).end_with?(".bundle") && !object.real_file_path.exist?
+                            Pod::UI.puts "bundle missing from: " + object.real_file_path.to_s + " linked to: " + object.target_file_path.to_s
+                        end
+
                         object
                     end
                     Prebuild::Passer.resources_to_copy_for_static_framework[target.name] = path_objects
                 end
 
                 # see if there are bundles that were NOT copied into the framework. These usually get dropped and we don't want that...
+                # also, cocoapods-binary assumes they're inside the framework itself
+                # we could be smarter by actually keeping track above of referenced ones but I'm lazy.
                 build_dir = Pod::Prebuild.build_dir(sandbox_path)
                 device = ""
                 case target.platform.name
@@ -168,7 +175,7 @@ module Pod
                 # Pod::UI.puts "Target: " + target_name + " device build path: " + device_framework_build_path
                 Dir[Pathname(device_framework_build_path).parent + "./*.bundle"].each do |bundle|
                     framework_path = output_path + target.framework_name
-                    Pod::UI.puts "[!] Orphan bundle found: " + bundle.to_s
+                    Pod::UI.puts "[!] Orphaned bundle found: " + bundle.to_s
                     bundle_target_path = Pathname(framework_path) + File.basename(bundle)
                     if !bundle_target_path.exist?
                         FileUtils.makedirs(bundle_target_path.parent) unless bundle_target_path.parent.exist?
@@ -179,13 +186,13 @@ module Pod
                         object.target_file_path = sandbox.standard_sanbox_path + target_name + File.basename(bundle)
                         orphaned_bundles.append(object)
 
-                        Pod::UI.puts "    copied to: " + object.real_file_path.to_s + " linked to: " + object.target_file_path.to_s
+                        Pod::UI.puts "    copied to: " + object.real_file_path.to_s #+ " linked to: " + object.target_file_path.to_s
                     end
                 end # end orphaned bundles...
 
-                if !orphaned_bundles.empty?
-                   Prebuild::Passer.resources_to_copy_for_static_framework[target.name] += orphaned_bundles
-                end
+                # if !orphaned_bundles.empty?
+                   # Prebuild::Passer.resources_to_copy_for_static_framework[target.name] += orphaned_bundles
+                # end
 
             end
             Pod::Prebuild.remove_build_dir(sandbox_path)

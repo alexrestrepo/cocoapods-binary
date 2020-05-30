@@ -87,6 +87,7 @@ module Pod
 
                     path_objects = hash[name]
                     if path_objects != nil
+                        # Pod::UI.puts "paths: " + path_objects.to_s
                         path_objects.each do |object|
                             if !object.real_file_path.exist?
                                 Pod::UI.puts "!!! missing file " + object.real_file_path.to_s
