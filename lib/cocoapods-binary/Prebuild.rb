@@ -145,6 +145,16 @@ module Pod
                     path_objects = resources.map do |path|
                         object = Prebuild::Passer::ResourcePath.new
                         object.real_file_path = framework_path + File.basename(path)
+
+                        # storyboards and xibs change names when compiled, save the originals...
+                        if !object.real_file_path.exist?
+                            source_file_path = path.gsub('${PODS_ROOT}', sandbox_path.to_s) if path.start_with? '${PODS_ROOT}'
+                            source_file_path = path.gsub("${PODS_CONFIGURATION_BUILD_DIR}", sandbox_path.to_s) if path.start_with? "${PODS_CONFIGURATION_BUILD_DIR}"
+                            FileUtils.copy_entry(source_file_path, object.real_file_path, false, false, true)
+                            Pod::UI.puts "[!] Missing file " + object.real_file_path.to_s
+                            Pod::UI.puts "    re-copied from " + source_file_path.to_s
+                        end
+
                         object.target_file_path = path.gsub('${PODS_ROOT}', standard_sandbox_path.to_s) if path.start_with? '${PODS_ROOT}'
                         object.target_file_path = path.gsub("${PODS_CONFIGURATION_BUILD_DIR}", standard_sandbox_path.to_s) if path.start_with? "${PODS_CONFIGURATION_BUILD_DIR}"
 

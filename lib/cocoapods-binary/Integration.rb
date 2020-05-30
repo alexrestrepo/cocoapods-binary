@@ -89,25 +89,6 @@ module Pod
                     if path_objects != nil
                         # Pod::UI.puts "paths: " + path_objects.to_s
                         path_objects.each do |object|
-                            if !object.real_file_path.exist?
-                                Pod::UI.puts "!!! missing file " + object.real_file_path.to_s
-                                # storyboard -> storyboardc
-                                if object.real_file_path.to_s.end_with?("storyboard")
-                                    path = object.real_file_path.to_s
-                                    object.real_file_path = Pathname(path.gsub('storyboard', "storyboardc"))
-                                    object.target_file_path = Pathname(object.target_file_path.to_s.gsub('storyboard', "storyboardc"))
-
-                                    Pod::UI.puts "       -> missing file renamed " + object.real_file_path.to_s
-
-                                elsif object.real_file_path.to_s.end_with?("xib")
-                                    path = object.real_file_path.to_s
-                                    object.real_file_path = Pathname(path.gsub('xib', "nib"))
-                                    object.target_file_path = Pathname(object.target_file_path.to_s.gsub('xib', "nib"))
-
-                                    Pod::UI.puts "       -> missing file renamed " + object.real_file_path.to_s
-                                end
-                            end
-
                             if object.real_file_path.exist?
                                 make_link(object.real_file_path, object.target_file_path)
                             else
