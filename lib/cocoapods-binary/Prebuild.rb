@@ -121,9 +121,18 @@ module Pod
                     next
                 end
 
+                custom_build_options = Podfile::DSL.custom_build_options
+                custom_build_options_simulator = Podfile::DSL.custom_build_options_simulator
+                if target.static_framework?
+                    # we need to disable CLANG_ENABLE_MODULE_DEBUGGING for distribution. see https://forums.developer.apple.com/message/54432#65465
+                    custom_build_options += ['CLANG_ENABLE_MODULE_DEBUGGING=NO']
+                    custom_build_options_simulator += ['CLANG_ENABLE_MODULE_DEBUGGING=NO']
+                    # Pod::UI.puts "Custom build options: " + custom_build_options.to_s
+                end
+
                 output_path = sandbox.framework_folder_path_for_target_name(target.name)
                 output_path.mkpath unless output_path.exist?
-                Pod::Prebuild.build(sandbox_path, target, output_path, bitcode_enabled,  Podfile::DSL.custom_build_options,  Podfile::DSL.custom_build_options_simulator)
+                Pod::Prebuild.build(sandbox_path, target, output_path, bitcode_enabled,  custom_build_options,  custom_build_options_simulator)
 
                 # save the resource paths for later installing
                 if target.static_framework? and !target.resource_paths.empty?
